@@ -1,7 +1,9 @@
 initial
     begin
-    $display("### CUBE ROOT SIMULATION STARTED ###");
+    logic [31:0] x, expected;
+    integer fd, status, errors;
 
+    errors = 0;
     SW = 16'h0000;
     RESET_ALL();
     WAIT(100);
@@ -10,27 +12,21 @@ initial
     udm.check();
     udm.hreset();
 
-    // x = 0
-    udm.wr32(32'h10000000, 32'h00000000);
-    udm.rd32(32'h20000000);
+    fd = $fopen("vectors.txt", "r");
+    if (fd == 0) begin
+        $display("ERROR: cannot open vectors.txt");
+        $stop;
+    end
 
-    // x = 1
-    udm.wr32(32'h10000000, 32'h00000001);
-    udm.rd32(32'h20000000);
+    while (!$feof(fd)) begin
+        status = $fscanf(fd, "%h %h\n", x, expected);
+        if (status == 2) begin
+            udm.wr32(32'h10000000, x);
+            udm.rd32(32'h20000000);
+        end
+    end
 
-    // x = 8
-    udm.wr32(32'h10000000, 32'h00000008);
-    udm.rd32(32'h20000000);
-
-    // x = 29
-    udm.wr32(32'h10000000, 32'h0000001D);
-    udm.rd32(32'h20000000);
-
-    // x = 0xFFFFFFFF
-    udm.wr32(32'h10000000, 32'hFFFFFFFF);
-    udm.rd32(32'h20000000);
-
-    WAIT(1000);
-    $display("### CUBE ROOT SIMULATION FINISHED ###");
+    $fclose(fd);
+    $display("### VECTOR SIMULATION FINISHED ###");
     $stop;
     end
