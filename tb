@@ -1,0 +1,43 @@
+initial
+    begin
+    logic [31:0] rd;
+
+    $display("### CUBE ROOT SIMULATION STARTED ###");
+
+    SW = 16'h0000;
+    RESET_ALL();
+    WAIT(100);
+
+    udm.cfg(`DIVIDER_115200, 2'b00);
+    udm.check();
+    udm.hreset();
+
+    // x = 0
+    udm.wr32(32'h10000000, 32'h00000000);
+    rd = udm.rd32(32'h20000000);
+    $display("cube_root(0) = %0d", rd);
+
+    // x = 1
+    udm.wr32(32'h10000000, 32'h00000001);
+    rd = udm.rd32(32'h20000000);
+    $display("cube_root(1) = %0d", rd);
+
+    // x = 8
+    udm.wr32(32'h10000000, 32'h00000008);
+    rd = udm.rd32(32'h20000000);
+    $display("cube_root(8) = %0d", rd);
+
+    // x = 29
+    udm.wr32(32'h10000000, 32'h0000001D);
+    rd = udm.rd32(32'h20000000);
+    $display("cube_root(29) = %0d", rd);
+
+    // x = 0xFFFFFFFF
+    udm.wr32(32'h10000000, 32'hFFFFFFFF);
+    rd = udm.rd32(32'h20000000);
+    $display("cube_root(4294967295) = %0d", rd);
+
+    WAIT(1000);
+    $display("### CUBE ROOT SIMULATION FINISHED ###");
+    $stop;
+    end
