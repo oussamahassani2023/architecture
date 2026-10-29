@@ -3,10 +3,6 @@ module cube_comb (
     output logic [31:0] y
 );
 
-    // r[i] : remaining value after stage i
-    // q[i] : cube-root prefix after stage i
-    // p[i] : 3*q^2 + 3*q + 1
-
     logic [31:0] r [11:0];
     logic [10:0] q [11:0];
     logic [23:0] p [11:0];
@@ -20,18 +16,24 @@ module cube_comb (
         for (i = 0; i < 11; i++) begin : stage
             localparam int S = 30 - 3*i;
 
-            logic       take;
-            logic [31:0] sub;
+            logic [31:0] hi;
+            logic [31:0] lo;
+            logic        take;
+            logic [31:0] hi_sub;
             logic [25:0] p_next;
 
-            // x >= p * 2^S  is equivalent to  (x >> S) >= p
-            assign take = (r[i] >> S) >= p[i];
+            // hi = r >> S, lo = r mod 2^S
+            assign hi = r[i] >> S;
+            assign lo = r[i] & (32'hFFFFFFFF >> (32 - S));
 
-            // p * 2^S, truncated to 32 bits;
-            // correct because the subtraction result always fits in 32 bits
-            assign sub = p[i] << S;
+            // x >= p * 2^S  <=>  hi >= p
+            assign take = (hi >= p[i]);
 
-            assign r[i+1] = take ? (r[i] - sub) : r[i];
+            // narrow subtraction: only hi participates
+            assign hi_sub = hi - p[i];
+
+            assign r[i+1] = take ? ((hi_sub << S) | lo)
+                                 : r[i];
 
             assign q[i+1] = take ? {q[i], 1'b1}
                                  : {q[i], 1'b0};
